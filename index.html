@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive GIT Drug Reference</title>
+    <style>
+        /* Basic Reset and Typography */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: #f9fafb; color: #111827; line-height: 1.6; padding: 1rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { font-size: 2.5rem; font-weight: 800; display: flex; align-items: center; margin-bottom: 0.5rem; }
+        h1::before { content: "🧪"; margin-right: 0.5rem; font-size: 2rem; }
+        p.subtitle { font-size: 1.125rem; color: #6b7280; }
+
+        /* Search Bar */
+        .search-container { background: white; border-radius: 0.75rem; padding: 1rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-bottom: 1rem; }
+        .search-input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 1rem; }
+        .search-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .clear-btn { position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6b7280; }
+
+        /* Buttons */
+        .btn { padding: 0.5rem 1rem; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 600; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-success { background: #16a34a; color: white; }
+        .btn-success:hover { background: #15803d; }
+        .btn-warning { background: #f59e0b; color: #92400e; }
+        .btn-warning:hover { background: #d97706; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-secondary { background: white; color: #374151; border: 1px solid #d1d5db; }
+        .btn-secondary:hover { background: #f3f4f6; }
+        .btn-small { padding: 0.25rem 0.5rem; font-size: 0.875rem; }
+        .btn-icon { padding: 0.5rem; border-radius: 50%; }
+
+        /* Category Filters */
+        .categories { display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 0.5rem; margin-bottom: 2rem; }
+        .category-btn { padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; border-radius: 9999px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: all 0.2s; white-space: nowrap; }
+        .category-btn.active { background: #3b82f6; color: white; transform: scale(1.05); }
+        .category-btn:not(.active) { background: white; color: #6b7280; }
+        .category-btn:not(.active):hover { background: #f3f4f6; }
+
+        /* Table */
+        .table-container { background: white; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: 0.75rem 1.5rem; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #6b7280; background: #f9fafb; }
+        td { padding: 1rem 1.5rem; border-bottom: 1px solid #f3f4f6; }
+        tr:hover { background: #eff6ff; }
+        tr.selected { background: #dbeafe !important; }
+        .no-results { text-align: center; padding: 3rem; color: #6b7280; font-size: 1rem; }
+
+        /* Modals */
+        .modal { position: fixed; inset: 0; background: rgba(17,24,39,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 1rem; }
+        .modal-content { background: white; border-radius: 0.75rem; padding: 1.5rem; max-width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem; }
+        .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; }
+        form { display: flex; flex-direction: column; gap: 1rem; }
+        input, select, textarea { padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 1rem; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        textarea { resize: vertical; min-height: 80px; }
+
+        /* Details Panel */
+        .details-panel { background: #1d4ed8; color: white; padding: 1.5rem; border-radius: 0.75rem; max-width: 90%; }
+        .details-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .details-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #3b82f6; }
+        .remarks-box { background: #1e40af; padding: 1rem; border-radius: 0.5rem; max-height: 12rem; overflow-y: auto; margin-top: 1rem; }
+
+        /* Analysis Modal Styles */
+        .analysis-section { margin-bottom: 1.5rem; }
+        .analysis-header { font-size: 1.125rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .warning-box { background: #fef2f2; padding: 1rem; border-radius: 0.5rem; border: 1px solid #fecaca; color: #dc2626; }
+        .interactions-list, .contraindications-list { list-style: disc inside; padding-left: 1rem; }
+        .loading { display: flex; flex-direction: column; align-items: center; padding: 4rem; }
+        .spinner { border: 4px solid #f3f4f6; border-top: 4px solid #3b82f6; border-radius: 50%; width: 2rem; height: 2rem; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error { background: #fef2f2; padding: 1rem; border-radius: 0.5rem; color: #dc2626; }
+
+        /* Floating Button */
+        .fab { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #3b82f6; color: white; border: none; border-radius: 50%; width: 3rem; height: 3rem; font-size: 1.5rem; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transition: all 0.3s; }
+        .fab:hover { transform: scale(1.05); background: #2563eb; }
+
+        /* Message */
+        .message { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #374151; color: white; padding: 0.75rem 1rem; border-radius: 0.5rem; z-index: 100; animation: fadeInOut 5s ease-in-out forwards; }
+        @keyframes fadeInOut { 0%, 100% { opacity: 0; } 10%, 90% { opacity: 1; } }
+
+        /* Responsive */
+        @media (max-width: 768px) { .container { padding: 0.5rem; } h1 { font-size: 2rem; } .categories { flex-wrap: wrap; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Interactive GIT Drug Reference (Local Data)</h1>
+            <p class="subtitle">Searchable reference with local data persistence, CSV export, and Gemini Safety Analysis. Total Drugs: <span id="drug-count">0</span></p>
+        </header>
+
+        <div class="search-container">
+            <div style="position: relative;">
+                <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #9ca3af;">🔍</span>
+                <input type="text" id="search-input" class="search-input" placeholder="Search by name, code, or instruction...">
+                <button id="clear-search" class="clear-btn" style="display: none;">✕</button>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1rem;">
+            <button id="export-btn" class="btn btn-success">📥 Export Data (CSV)</button>
+            <label for="ocr-input" class="btn btn-warning" id="ocr-label">📷 OCR Scan New Page
+                <input type="file" id="ocr-input" accept="image/*" style="display: none;">
+            </label>
+        </div>
+
+        <div class="categories" id="categories"></div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Generic Name</th>
+                        <th>Form</th>
+                    </tr>
+                </thead>
+                <tbody id="drug-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div id="details-modal" class="modal" style="display: none;">
+        <div class="details-panel">
+            <div class="details-header">
+                <h3 style="display: flex; align-items: center; gap: 0.5rem;"><span style="font-size: 1.25rem;">ℹ️</span> Details for <span id="detail-name"></span></h3>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button id="analyze-btn" class="btn btn-warning btn-small">⚠️ Analyze Safety</button>
+                    <button id="edit-btn" class="btn btn-secondary btn-small" style="padding: 0.5rem; border-radius: 50%;">✏️</button>
+                    <button id="delete-btn" class="btn btn-danger btn-small" style="padding: 0.5rem; border-radius: 50%;">🗑️</button>
+                    <button id="close-detail" class="btn btn-secondary btn-small" style="padding: 0.5rem; border-radius: 50%;">✕</button>
+                </div>
+            </div>
+            <div class="details-section">
+                <p><strong>Code:</strong> <span id="detail-code"></span></p>
+                <p><strong>Category:</strong> <span id="detail-category"></span></p>
+                <p><strong>Dosage Form:</strong> <span id="detail-form"></span></p>
+                <div class="remarks-box">
+                    <p style="font-weight: 700; margin-bottom: 0.5rem; font-size: 1.125rem;">Key Instructions / Remarks:</p>
+                    <p id="detail-remarks"></p>
+                </div>
+            </div>
+            <!-- Confirm Delete -->
+            <div id="confirm-delete" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(220,38,38,0.1); border-radius: 0.5rem;">
+                <p style="color: #dc2626; margin-bottom: 0.5rem;">Confirm Delete?</p>
+                <button id="yes-delete" class="btn btn-danger btn-small">Yes</button>
+                <button id="no-delete" class="btn btn-secondary btn-small">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Form Modal -->
+    <div id="form-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="form-title">Add New Drug</h2>
+                <button class="close-btn" id="close-form">&times;</button>
+            </div>
+            <form id="drug-form">
+                <input type="text" name="code" placeholder="Code Number (e.g., 01.99.01)" required disabled id="form-code">
+                <input type="text" name="name" placeholder="Generic Name" required id="form-name">
+                <select name="category" required id="form-category">
+                    <option value="">Select Category</option>
+                    <option value="Antacid">Antacid</option>
+                    <option value="Antispasmodic">Antispasmodic</option>
+                    <option value="Motility Stimulant">Motility Stimulant</option>
+                    <option value="Ulcer Healing">Ulcer Healing</option>
+                    <option value="Antidiarrheal">Antidiarrheal</option>
+                    <option value="Other">Other</option>
+                </select>
+                <input type="text" name="form" placeholder="Dosage Form (e.g., Tablets, Suspension)" required id="form-form">
+                <textarea name="remarks" placeholder="Remarks / Key Instructions" required id="form-remarks"></textarea>
+                <button type="submit" class="btn btn-primary">Add Drug</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Analysis Modal -->
+    <div id="analysis-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="color: #2563eb; border-bottom-color: #3b82f6;">Safety Analysis: <span id="analysis-name"></span></h2>
+                <button class="close-btn" id="close-analysis">&times;</button>
+            </div>
+            <div id="analysis-loading" class="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 1rem; color: #6b7280;">Checking current drug safety information...</p>
+            </div>
+            <div id="analysis-error" class="error" style="display: none;"></div>
+            <div id="analysis-content" style="display: none;">
+                <div class="analysis-section">
+                    <h3 class="analysis-header" style="color: #dc2626;">⚠️ Black Box Warning</h3>
+                    <div class="warning-box">
+                        <p id="black-box"></p>
+                    </div>
+                </div>
+                <div class="analysis-section">
+                    <h3 class="analysis-header" style="color: #ca8a04;">Important Drug Interactions</h3>
+                    <ul id="major-interactions" class="interactions-list" style="display: none;"></ul>
+                    <p id="no
